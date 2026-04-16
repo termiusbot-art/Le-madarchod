@@ -112,7 +112,7 @@ else:
             db_sql.session.commit()
             print(f"SQLite: default user token: {default_token}")
 
-# ---------- Captcha Helper ----------
+# ---------- Helper Functions ----------
 def generate_captcha():
     a = random.randint(1, 10)
     b = random.randint(1, 10)
@@ -127,7 +127,25 @@ def generate_captcha():
         question = f"{a} - {b} = ?"
     return question, answer
 
-# ---------- Proxy Management ----------
+def generate_token():
+    return secrets.token_urlsafe(32)
+
+def get_user_by_token(token):
+    if USE_MONGO:
+        return users_col.find_one({"token": token})
+    else:
+        return User.query.filter_by(token=token).first()
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_logged_in' not in session or not session['admin_logged_in']:
+            flash('Please login as admin first', 'danger')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ---------- Proxy Management (for HTTP fallback) ----------
 PROXY_LIST = []
 LAST_PROXY_FETCH = 0
 
@@ -160,25 +178,6 @@ def get_random_proxy():
     return None
 
 fetch_proxies()
-
-# ---------- Helper Functions (DB-agnostic) ----------
-def generate_token():
-    return secrets.token_urlsafe(32)
-
-def get_user_by_token(token):
-    if USE_MONGO:
-        return users_col.find_one({"token": token})
-    else:
-        return User.query.filter_by(token=token).first()
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'admin_logged_in' not in session or not session['admin_logged_in']:
-            flash('Please login as admin first', 'danger')
-            return redirect(url_for('admin_login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # ---------- GitHub Helpers ----------
 def create_github_repository(token, repo_name="InfernoCore"):
@@ -545,7 +544,7 @@ def run_attack_on_nodes(user_id, target, port, duration, method, source='web'):
             log.status = 'completed'
             db_sql.session.commit()
 
-# ---------- Flask Routes (Luxury UI) ----------
+# ---------- Flask Routes ----------
 @app.route('/')
 def index():
     if 'user_token' in session:
@@ -726,7 +725,7 @@ def api_attack():
     thread.start()
     return jsonify({'status': 'started', 'message': 'Attack started'}), 200
 
-# ---------- Admin Routes (condensed, same logic) ----------
+# ---------- Admin Routes ----------
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -1158,22 +1157,22 @@ def logout():
 LOGIN_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Login • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0b10;--card:#161b22;--gold:#ffb400;--text:#e6edf3;--dim:#8b949e;--border:rgba(255,180,0,0.1);}
+:root{--bg:#07080a;--surface:#11141b;--accent:#ffb400;--text:#e6edf3;--dim:#8b949e;--border:rgba(255,180,0,0.15);}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:radial-gradient(circle at 20% 30%, #0a0b10, #000); font-family:'Inter',sans-serif; color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid var(--border); padding:40px; width:100%; max-width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.5);}
+body{background:radial-gradient(circle at 20% 30%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid var(--border); padding:40px; width:100%; max-width:450px;}
 input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%; margin-bottom:20px;}
-input:focus{outline:none; border-color:var(--gold); box-shadow:0 0 12px rgba(255,180,0,0.3);}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:bold; width:100%; cursor:pointer;}
-a{color:var(--gold); text-decoration:none;}
+input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 12px rgba(255,180,0,0.3);}
+.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:800; width:100%; cursor:pointer;}
+a{color:var(--accent); text-decoration:none;}
 </style></head>
-<body><div class="glass-card"><h2 class="text-center mb-4" style="color:var(--gold);">🔐 INFERNO</h2>
+<body><div class="glass-card"><h2 class="text-center mb-4" style="color:var(--accent);">🔐 INFERNO</h2>
 {% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}{% endwith %}
 <form method="POST">
     <input type="text" name="token" placeholder="Access Token" required>
-    <div class="mb-3"><label style="color:var(--gold);">Captcha: {{ captcha_question }}</label><input type="text" name="captcha" placeholder="Your answer" required></div>
+    <div><label style="color:var(--accent);">Captcha: {{ captcha_question }}</label><input type="text" name="captcha" placeholder="Your answer" required></div>
     <button type="submit" class="btn-gold">🚀 Login</button>
 </form>
 <p class="text-center mt-3">No token? <a href="/register">Generate one</a></p><hr><p class="text-center mt-3"><small>Admin? <a href="/admin/login">Admin Login</a></small></p></div></body></html>
@@ -1182,9 +1181,9 @@ a{color:var(--gold); text-decoration:none;}
 REGISTER_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Register • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:radial-gradient(circle at 20% 30%, #0a0b10, #000); font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,180,0,0.1); padding:40px; width:100%; max-width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.5);}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:bold; width:100%; cursor:pointer;}
+<style>body{background:radial-gradient(circle at 20% 30%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,180,0,0.15); padding:40px; width:100%; max-width:450px;}
+.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:800; width:100%; cursor:pointer;}
 input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%; margin-bottom:20px;}
 </style></head>
 <body><div class="glass-card"><h2 style="color:#ffb400;">✨ Create Account</h2>
@@ -1196,46 +1195,120 @@ input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; 
 
 DASHBOARD_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Dashboard • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-:root{--bg:#0a0b10;--card:#161b22;--gold:#ffb400;--text:#e6edf3;--dim:#8b949e;--border:rgba(255,180,0,0.15);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:radial-gradient(circle at 10% 20%, #0a0b10, #000); font-family:'Inter',sans-serif; color:var(--text); overflow-x:hidden;}
-.sidebar{position:fixed;left:0;top:0;width:280px;height:100%;background:rgba(5,10,20,0.95);backdrop-filter:blur(16px);border-right:1px solid var(--border);padding:30px 20px;z-index:10;}
-.main{margin-left:280px;padding:30px;}
-.glass-card{background:rgba(22,27,34,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid var(--border);padding:28px;margin-bottom:30px;transition:0.3s;}
-.glass-card:hover{border-color:var(--gold);transform:translateY(-3px);}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;color:#000;width:100%;}
-.stat-number{font-size:44px;font-weight:800;background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
-.menu-toggle{display:none;position:fixed;top:20px;left:20px;z-index:20;background:var(--gold);border:none;padding:10px 15px;border-radius:30px;color:#000;cursor:pointer;}
-.nav-link{display:block;padding:12px 20px;margin:8px 0;border-radius:40px;color:var(--dim);text-decoration:none;}
-.nav-link:hover,.nav-link.active{background:rgba(255,180,0,0.15);color:var(--gold);}
-@media (max-width:800px){.sidebar{transform:translateX(-100%);width:260px;}.main{margin-left:0;padding:70px 20px 20px;}.menu-toggle{display:block;}}
-.table-responsive{overflow-x:auto;}
-</style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFERNO | Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07080a;
+            --surface: #11141b;
+            --accent: #ffb400;
+            --accent-glow: rgba(255, 180, 0, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #8b949e;
+            --border: rgba(255, 255, 255, 0.05);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: all 0.3s; z-index: 100; }
+        .brand-section { padding: 30px; text-align: center; border-bottom: 1px solid var(--border); }
+        .brand-logo { font-weight: 800; font-size: 1.4rem; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
+        .nav-list { flex: 1; padding: 20px; list-style: none; }
+        .nav-item { padding: 14px 18px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; transition: all 0.3s; font-weight: 600; }
+        .nav-item:hover, .nav-item.active { background: rgba(255, 180, 0, 0.08); color: var(--accent); }
+        .main-container { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 40px; background: radial-gradient(circle at top right, #161b22, var(--bg)); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .user-badge { background: var(--surface); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .status-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        .glass-card { background: rgba(17, 20, 27, 0.6); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; transition: all 0.3s; }
+        .glass-card:hover { border-color: var(--accent-glow); transform: translateY(-5px); }
+        .card-header { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .big-stat { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .progress-track { width: 100%; height: 6px; background: #1c2128; border-radius: 10px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #ff8c00); box-shadow: 0 0 15px var(--accent-glow); width: 0%; transition: width 1.5s ease; }
+        .action-button { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
+        .action-button:hover { box-shadow: 0 0 25px var(--accent-glow); filter: brightness(1.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: var(--text-secondary); font-size: 0.8rem; padding: 10px; }
+        td { padding: 15px 10px; border-top: 1px solid var(--border); font-weight: 500; }
+        .status-online { color: #00ff88; }
+        @media (max-width: 768px) { .sidebar { display: none; } .main-container { padding: 20px; } .menu-toggle { display: block; } }
+        .menu-toggle { display: none; position: fixed; top: 20px; left: 20px; z-index: 200; background: var(--accent); border: none; padding: 10px 15px; border-radius: 30px; color: #000; cursor: pointer; }
+        .form-control { width:100%; padding:12px; background:#1f2937; border:1px solid #374151; border-radius:40px; color:white; margin-bottom:12px; }
+    </style>
 </head>
-<body><button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-<div class="sidebar" id="sidebar"><div class="text-center mb-4"><h2 style="color:var(--gold);">🔥 INFERNO</h2></div>
-<nav><a href="/dashboard" class="nav-link active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a><a href="/attack" class="nav-link"><i class="fas fa-bolt me-2"></i> Attack Hub</a><a href="/products" class="nav-link"><i class="fas fa-shopping-cart me-2"></i> Products</a><a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></nav>
-<div class="mt-5 pt-3 border-top"><p><i class="fas fa-gem me-2"></i> {{ user.plan }}</p><p><i class="fas fa-hourglass-half me-2"></i> Max Duration: {{ user.max_duration }}s</p><p><i class="fas fa-layer-group me-2"></i> Concurrent: {{ user.max_concurrent }}</p><p><i class="far fa-calendar-alt me-2"></i> Expires: Lifetime</p></div></div>
-<div class="main"><div class="glass-card"><div class="d-flex justify-content-between align-items-center"><h3><i class="fas fa-chart-line me-2"></i> Free Network</h3><span class="badge bg-info">{{ slots_used }} / {{ max_slots }} Slots Used</span></div>
-<div class="mt-3"><div class="d-flex justify-content-between"><span>Network Load</span><span>{{ (slots_used/max_slots*100)|round(0) if max_slots>0 else 0 }}%</span></div><div class="progress mt-2" style="height:8px;background:#21262d;"><div class="progress-bar" style="width: {{ (slots_used/max_slots*100) if max_slots>0 else 0 }}%; background:linear-gradient(90deg,#ffb400,#ff8c00);"></div></div></div>
-<div class="row mt-4"><div class="col-6 text-center"><div class="stat-number">{{ slots_used }}</div><div>Slots Used</div></div><div class="col-6 text-center"><div class="stat-number">{{ max_slots }}</div><div>Max Slots</div></div></div>
-<div class="mt-4"><p class="text-muted">Upgrade for 10x Power</p><a href="/products" class="btn-gold">⚡ Upgrade Now</a></div></div>
-<div class="glass-card"><h3><i class="fas fa-history me-2"></i> Recent Attacks</h3><div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th>Target</th><th>Port</th><th>Duration</th><th>Method</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.duration }}s</td><td>{{ a.method }}</td><td><span class="badge bg-success">{{ a.status }}</span></td><td>{{ a.timestamp.strftime('%H:%M:%S') }}</td></tr>{% else %}<tr><td colspan="6">No attacks yet</td></tr>{% endfor %}</tbody></table></div></div></div>
-<script>document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));</script>
+<body>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <aside class="sidebar" id="sidebar">
+        <div class="brand-section"><div class="brand-logo">INFERNO</div></div>
+        <ul class="nav-list">
+            <li class="nav-item active"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+            <li class="nav-item" onclick="window.location.href='/attack'"><i class="fas fa-bolt"></i> Attack Hub</li>
+            <li class="nav-item" onclick="window.location.href='/products'"><i class="fas fa-shopping-cart"></i> Products</li>
+            <li class="nav-item" onclick="window.location.href='/logout'"><i class="fas fa-sign-out-alt"></i> Logout</li>
+        </ul>
+        <div style="padding:20px;"><div class="user-badge"><div class="status-dot"></div><span>{{ user.plan }}</span></div></div>
+    </aside>
+    <main class="main-container">
+        <div class="top-bar"><div><h1 style="font-weight:800;">Command Center</h1><p style="color:var(--text-secondary);">Welcome back, {{ user.username }}.</p></div></div>
+        <div class="grid-layout">
+            <div class="glass-card">
+                <div class="card-header"><span>Free Network</span><span style="color:var(--accent);">{{ slots_used }}/{{ max_slots }} Slots Used</span></div>
+                <div class="big-stat">{{ (slots_used/max_slots*100)|round(0) if max_slots>0 else 0 }}%</div>
+                <div class="progress-track"><div class="progress-fill" id="loadBar" style="width: {{ (slots_used/max_slots*100) if max_slots>0 else 0 }}%;"></div></div>
+                <p style="font-size:0.85rem; color:var(--text-secondary);">Upgrade for 10x Power</p>
+                <a href="/products"><button class="action-button" style="margin-top:15px;">⚡ Upgrade Now</button></a>
+            </div>
+            <div class="glass-card">
+                <div class="card-header"><span>Quick Attack</span></div>
+                <form id="attackForm">
+                    <input type="text" name="host" placeholder="Target IP" class="form-control" required>
+                    <input type="number" name="port" placeholder="Port" class="form-control" required>
+                    <input type="number" name="time" placeholder="Duration (sec)" value="60" class="form-control" required>
+                    <select name="method" class="form-control"><option value="UDP">UDP Flood 🔥🔥🔥🔥🔥</option></select>
+                    <button type="submit" class="action-button">💥 Launch Attack</button>
+                </form>
+                <div id="attackResult" style="margin-top:15px;"></div>
+            </div>
+        </div>
+        <div class="glass-card" style="margin-top:30px;">
+            <div class="card-header">Recent Attacks</div>
+            <div class="table-responsive"><table><thead><tr><th>Target</th><th>Port</th><th>Duration</th><th>Method</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.duration }}s</td><td>{{ a.method }}</td><td><span class="status-online">{{ a.status }}</span></td><td>{{ a.timestamp.strftime('%H:%M:%S') }}</td></tr>{% else %}<tr><td colspan="6" style="text-align:center;">No attacks yet</td></tr>{% endfor %}</tbody></table></div>
+        </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.getElementById('menuToggle')?.addEventListener('click', () => {
+            let s = document.getElementById('sidebar');
+            s.style.display = s.style.display === 'none' ? 'flex' : 'none';
+        });
+        $('#attackForm').submit(function(e){
+            e.preventDefault();
+            $.post('/launch', $(this).serialize(), function(data){
+                if(data.status === 'success') {
+                    $('#attackResult').html('<div style="color:#00ff88;">'+data.message+'</div>');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    $('#attackResult').html('<div style="color:#ff5555;">'+data.message+'</div>');
+                }
+            });
+        });
+    </script>
 </body></html>
 '''
 
 ATTACK_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Attack Hub • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>body{background:radial-gradient(circle at 10% 20%, #0a0b10, #000); font-family:'Inter',sans-serif; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;color:#000;}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
+.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:800;color:#000;}
 input,select{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%;}
 </style>
 </head>
@@ -1255,10 +1328,10 @@ input,select{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius
 PRODUCTS_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Products • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>body{background:radial-gradient(circle at 10% 20%, #0a0b10, #000); font-family:'Inter',sans-serif; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;color:#000;}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
+.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:800;color:#000;}
 .pricing-card{text-align:center;}.price{font-size:36px; font-weight:800; color:#ffb400;}
 </style>
 </head>
@@ -1273,10 +1346,10 @@ PRODUCTS_HTML = '''
 ADMIN_LOGIN_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Login • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:radial-gradient(circle at 10% 20%, #0a0b10, #000); font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,180,0,0.2); padding:40px; width:100%; max-width:450px;}
+<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,180,0,0.2); padding:40px; width:100%; max-width:450px;}
 input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%; margin-bottom:20px;}
-.btn-admin{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:bold; width:100%;}
+.btn-admin{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:800; width:100%;}
 </style>
 </head>
 <body><div class="glass-card"><h2 class="text-center mb-4" style="color:#ffb400;">👑 Admin Login</h2>
@@ -1288,11 +1361,11 @@ input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; 
 ADMIN_DASHBOARD_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Dashboard • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>body{background:radial-gradient(circle at 10% 20%, #0a0b10, #000); font-family:'Inter',sans-serif; color:#fff;}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff;}
 .sidebar{position:fixed;left:0;top:0;width:260px;height:100%;background:rgba(5,10,20,0.95);border-right:1px solid rgba(255,180,0,0.2);padding:30px 20px;z-index:10;}
 .main{margin-left:260px;padding:30px;}
-.glass-card{background:rgba(22,27,34,0.45);backdrop-filter:blur(12px);border-radius:24px;border:1px solid rgba(255,180,0,0.15);padding:20px;margin-bottom:25px;}
+.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:24px;border:1px solid rgba(255,180,0,0.15);padding:20px;margin-bottom:25px;}
 .stat-number{font-size:32px;font-weight:800;background:linear-gradient(135deg,#fff,#ffb400);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .nav-link{display:block;padding:12px 20px;margin:8px 0;border-radius:40px;color:#8b949e;text-decoration:none;}
 .nav-link:hover,.nav-link.active{background:rgba(255,180,0,0.15);color:#ffb400;}
@@ -1316,9 +1389,9 @@ ADMIN_DASHBOARD_HTML = '''
 ADMIN_ATTACK_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Attack • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:radial-gradient(circle at 10% 20%, #0a0b10, #000); font-family:'Inter',sans-serif; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
-.btn-admin{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;color:#000;}
+<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
+.btn-admin{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:800;color:#000;}
 input,select{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%;}
 </style>
 </head>
@@ -1337,8 +1410,8 @@ input,select{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius
 ADMIN_USERS_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Users • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0a0b10; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);border-radius:24px;padding:20px;}
+<style>body{background:#07080a; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;}
 table{width:100%;border-collapse:collapse;}
 th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
 th{color:#ffb400;}
@@ -1351,8 +1424,8 @@ th{color:#ffb400;}
 ADMIN_ATTACKS_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Attacks • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0a0b10; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);border-radius:24px;padding:20px;}
+<style>body{background:#07080a; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;}
 table{width:100%;border-collapse:collapse;}
 th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
 th{color:#ffb400;}
@@ -1365,8 +1438,8 @@ th{color:#ffb400;}
 ADMIN_API_KEYS_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin API Keys • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0a0b10; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
+<style>body{background:#07080a; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
 table{width:100%;border-collapse:collapse;}
 th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
 </style>
@@ -1379,8 +1452,8 @@ th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
 ADMIN_NODES_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Nodes • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0a0b10; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
+<style>body{background:#07080a; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
 .status-online{color:#00ff88;}.status-offline{color:#ff6680;}
 table{width:100%;border-collapse:collapse;}
 th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
@@ -1390,14 +1463,14 @@ th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
 <div class="row g-4"><div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add GitHub Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_github"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="github_token" placeholder="GitHub Token" class="form-control mb-2" required><input type="text" name="github_repo" placeholder="Repo Name (default: InfernoCore)" class="form-control mb-2"><div class="form-check"><input type="checkbox" name="enabled" class="form-check-input" checked> Enabled</div><button type="submit" class="btn btn-primary mt-2">Add GitHub Node</button></form></div></div></div>
 <div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add VPS Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_vps" enctype="multipart/form-data"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="vps_host" placeholder="VPS Host (IP)" class="form-control mb-2" required><input type="number" name="vps_port" placeholder="Port" class="form-control mb-2" value="22"><input type="text" name="vps_username" placeholder="Username" class="form-control mb-2" required><input type="password" name="vps_password" placeholder="Password" class="form-control mb-2"><div class="mb-2"><label>SSH Private Key (.pem)</label><input type="file" name="vps_key_file" class="form-control" accept=".pem,.key"></div><div class="form-check"><input type="checkbox" name="enabled" class="form-check-input" checked> Enabled</div><button type="submit" class="btn btn-primary mt-2">Add VPS Node</button></form></div></div></div></div>
 <div class="card bg-dark mt-4"><div class="card-header">📤 Distribute Binary</div><div class="card-body"><form method="POST" action="/admin/upload_binary" enctype="multipart/form-data"><input type="file" name="binary" class="form-control bg-dark text-white" required><button type="submit" class="btn btn-warning mt-2">Upload & Distribute</button></form><small>Upload compiled 'soul' binary – sent to all enabled nodes.</small></div></div>
-<div class="table-responsive mt-4"><table><thead><tr><th>Name</th><th>Type</th><th>Enabled</th><th>Status</th><th>Binary</th><th>Details</th><th>Actions</th></tr></thead><tbody>{% for n in nodes %}<tr><td>{{ n.name }}</td><td>{{ n.node_type }}</td><td>{% if n.enabled %}✔{% else %}✘{% endif %}</td><td class="{% if n.last_status == 'online' %}status-online{% else %}status-offline{% endif %}">{{ n.last_status }}</td><td>{% if n.binary_present %}✓{% else %}✗{% endif %}</td><td>{% if n.node_type == 'github' %}{{ n.github_repo }}{% else %}{{ n.vps_host }}:{{ n.vps_port }}{% endif %}</td><td><form method="POST" action="/admin/nodes/{{ n.id }}/check" style="display:inline"><button class="btn btn-sm btn-info">Check</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/toggle" style="display:inline"><button class="btn btn-sm btn-warning">Toggle</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/delete" style="display:inline" onsubmit="return confirm('Delete node?')"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div></body></html>
+<div class="table-responsive mt-4"><table class="table"><thead><tr><th>Name</th><th>Type</th><th>Enabled</th><th>Status</th><th>Binary</th><th>Details</th><th>Actions</th></tr></thead><tbody>{% for n in nodes %}<tr><td>{{ n.name }}</td><td>{{ n.node_type }}</td><td>{% if n.enabled %}✔{% else %}✘{% endif %}</td><td class="{% if n.last_status == 'online' %}status-online{% else %}status-offline{% endif %}">{{ n.last_status }}</td><td>{% if n.binary_present %}✓{% else %}✗{% endif %}</td><td>{% if n.node_type == 'github' %}{{ n.github_repo }}{% else %}{{ n.vps_host }}:{{ n.vps_port }}{% endif %}</td><td><form method="POST" action="/admin/nodes/{{ n.id }}/check" style="display:inline"><button class="btn btn-sm btn-info">Check</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/toggle" style="display:inline"><button class="btn btn-sm btn-warning">Toggle</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/delete" style="display:inline" onsubmit="return confirm('Delete node?')"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div></body></html>
 '''
 
 ADMIN_SETTINGS_HTML = '''
 <!DOCTYPE html>
 <html><head><title>Admin Settings • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0a0b10; color:#fff; padding:20px;}
-.glass-card{background:rgba(22,27,34,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
+<style>body{background:#07080a; color:#fff; padding:20px;}
+.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
 .btn-danger{background:#ff3355;}.btn-warning{background:#ffaa00; color:#000;}
 </style>
 </head>
