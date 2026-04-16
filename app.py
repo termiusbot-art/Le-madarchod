@@ -18,7 +18,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_urlsafe(32))
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB for binary upload
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
 
 # Ensure keys directory exists (for VPS .pem files)
 os.makedirs(os.path.join(app.root_path, 'keys'), exist_ok=True)
@@ -149,7 +149,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ---------- Proxy Management (for HTTP fallback) ----------
+# ---------- Proxy Management ----------
 PROXY_LIST = []
 LAST_PROXY_FETCH = 0
 
@@ -280,7 +280,7 @@ def test_vps_node(node):
             db_sql.session.commit()
         return False, str(e)
 
-# ---------- Binary Distribution ----------
+# ---------- Binary Distribution (FIXED for GitHub) ----------
 def distribute_binary_to_github(node, binary_data):
     if USE_MONGO:
         token = node['github_token']
@@ -291,11 +291,18 @@ def distribute_binary_to_github(node, binary_data):
     try:
         g = Github(token)
         repo = g.get_repo(repo_name)
+        # Try to upload to main branch, fallback to master
+        branch = 'main'
         try:
-            contents = repo.get_contents("soul")
-            repo.update_file("soul", "Update binary", binary_data, contents.sha, branch="main")
-        except:
-            repo.create_file("soul", "Add binary", binary_data, branch="main")
+            # Check if main branch exists
+            repo.get_branch('main')
+        except GithubException:
+            branch = 'master'
+        try:
+            contents = repo.get_contents("soul", ref=branch)
+            repo.update_file("soul", "Update binary", binary_data, contents.sha, branch=branch)
+        except GithubException:
+            repo.create_file("soul", "Add binary", binary_data, branch=branch)
         if USE_MONGO:
             attack_nodes_col.update_one({"_id": node['_id']}, {"$set": {"binary_present": True}})
         else:
@@ -752,6 +759,13 @@ def admin_login():
         flash('Invalid admin credentials', 'danger')
     return render_template_string(ADMIN_LOGIN_HTML)
 
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
+    flash('Admin logged out', 'success')
+    return redirect(url_for('admin_login'))
+
 @app.route('/admin/dashboard')
 @admin_required
 def admin_dashboard():
@@ -1179,6 +1193,7 @@ def admin_settings():
 @app.route('/logout')
 def logout():
     session.clear()
+    flash('Logged out', 'success')
     return redirect(url_for('login'))
 
 # ---------- HTML Templates (Original Dark UI) ----------
