@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Werkzeug
+requests
+gunicorn
+paramiko
+PyGithub
+pymongo
+dnspython
