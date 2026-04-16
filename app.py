@@ -1153,206 +1153,142 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ---------- Luxury UI Templates (embedded) ----------
+# ---------- HTML Templates (Original Dark UI) ----------
 LOGIN_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Login • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#07080a;--surface:#11141b;--accent:#ffb400;--text:#e6edf3;--dim:#8b949e;--border:rgba(255,180,0,0.15);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:radial-gradient(circle at 20% 30%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid var(--border); padding:40px; width:100%; max-width:450px;}
+<html><head><title>Login • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.6); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(0,255,200,0.2); padding:40px; width:100%; max-width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.4);}
 input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%; margin-bottom:20px;}
-input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 12px rgba(255,180,0,0.3);}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:800; width:100%; cursor:pointer;}
-a{color:var(--accent); text-decoration:none;}
-</style></head>
-<body><div class="glass-card"><h2 class="text-center mb-4" style="color:var(--accent);">🔐 INFERNO</h2>
+input:focus{outline:none; border-color:#00ffcc; box-shadow:0 0 12px #00ffcc;}
+.btn-neon{background:linear-gradient(90deg,#00b377,#00cc88); border:none; border-radius:40px; padding:12px; font-weight:bold; width:100%;}
+a{color:#00ffcc; text-decoration:none;}</style></head>
+<body><div class="glass-card"><h2 class="text-center mb-4" style="color:#00ffcc;">🔐 Login</h2>
 {% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}{% endwith %}
 <form method="POST">
     <input type="text" name="token" placeholder="Access Token" required>
-    <div><label style="color:var(--accent);">Captcha: {{ captcha_question }}</label><input type="text" name="captcha" placeholder="Your answer" required></div>
-    <button type="submit" class="btn-gold">🚀 Login</button>
+    <div class="mb-3"><label class="form-label">Captcha: {{ captcha_question }}</label><input type="text" name="captcha" class="form-control" placeholder="Your answer" required></div>
+    <button type="submit" class="btn-neon">🚀 Login</button>
 </form>
 <p class="text-center mt-3">No token? <a href="/register">Generate one</a></p><hr><p class="text-center mt-3"><small>Admin? <a href="/admin/login">Admin Login</a></small></p></div></body></html>
 '''
 
 REGISTER_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Register • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:radial-gradient(circle at 20% 30%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,180,0,0.15); padding:40px; width:100%; max-width:450px;}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:800; width:100%; cursor:pointer;}
-input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%; margin-bottom:20px;}
+<html><head><title>Register • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.6); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(0,255,200,0.2); padding:40px; width:100%; max-width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.4);}
+.btn-neon{background:linear-gradient(90deg,#00b377,#00cc88); border:none; border-radius:40px; padding:12px; font-weight:bold; width:100%;}
 </style></head>
-<body><div class="glass-card"><h2 style="color:#ffb400;">✨ Create Account</h2>
+<body><div class="glass-card"><h2 class="text-center mb-4" style="color:#00ffcc;">✨ Create Account</h2>
 {% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}{% endwith %}
-<form method="POST"><div><label style="color:#ffb400;">Captcha: {{ captcha_question }}</label><input type="text" name="captcha" required></div>
-<button type="submit" class="btn-gold">🎫 Generate Token</button></form>
-<p class="text-center mt-3">Already have one? <a href="/login" style="color:#ffb400;">Login</a></p></div></body></html>
+<form method="POST">
+    <div class="mb-3"><label class="form-label">Captcha: {{ captcha_question }}</label><input type="text" name="captcha" class="form-control" placeholder="Your answer" required></div>
+    <button type="submit" class="btn-neon">🎫 Generate Token</button>
+</form>
+<p class="text-center mt-3">Already have one? <a href="/login">Login</a></p></div></body></html>
+'''
+
+PRODUCTS_HTML = '''
+<!DOCTYPE html>
+<html><head><title>Products • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.45); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(0,255,200,0.2); padding:28px; margin-bottom:30px; transition:0.3s;}
+.glass-card:hover{border-color:rgba(0,255,200,0.6); transform:translateY(-3px);}
+.btn-neon{background:linear-gradient(90deg,#00b377,#00cc88); border:none; border-radius:60px; padding:12px 24px; font-weight:bold; color:#000;}
+.pricing-card{text-align:center;}.price{font-size:36px; font-weight:800; color:#00ffcc;}
+@media (max-width:768px){.pricing-card{margin-bottom:20px;}}
+</style>
+</head>
+<body><div class="container py-4"><div class="d-flex justify-content-between align-items-center mb-4"><h2 style="color:#00ffcc;">🚀 Upgrade Your Plan</h2><a href="/dashboard" class="btn btn-link text-info">← Back</a></div>
+<div class="row g-4">{% for plan in plans %}<div class="col-md-3"><div class="glass-card pricing-card"><h3>{{ plan.name }}</h3><div class="price">{{ plan.price }}</div>
+<div class="mt-3"><p><i class="fas fa-layer-group"></i> {{ plan.concurrent }} Concurrent Slots</p><p><i class="fas fa-hourglass-half"></i> {{ plan.duration }}s Max Duration</p>
+<p><i class="fas fa-bolt"></i> {{ plan.methods }}</p><p><i class="fas fa-server"></i> {{ plan.slots }} Attack Slots</p></div>
+<button class="btn-neon mt-3" onclick="alert('Contact admin to upgrade: admin@example.com')">Contact Sales</button></div></div>{% endfor %}</div>
+<div class="glass-card mt-4 text-center"><h4>Need a custom plan?</h4><p>Contact our sales team for enterprise pricing and dedicated infrastructure.</p><button class="btn-neon" onclick="alert('Email: sales@stresser.com')">Contact Enterprise Sales</button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body></html>
 '''
 
 DASHBOARD_HTML = '''
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INFERNO | Command Center</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg: #07080a;
-            --surface: #11141b;
-            --accent: #ffb400;
-            --accent-glow: rgba(255, 180, 0, 0.3);
-            --text-primary: #ffffff;
-            --text-secondary: #8b949e;
-            --border: rgba(255, 255, 255, 0.05);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: all 0.3s; z-index: 100; }
-        .brand-section { padding: 30px; text-align: center; border-bottom: 1px solid var(--border); }
-        .brand-logo { font-weight: 800; font-size: 1.4rem; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
-        .nav-list { flex: 1; padding: 20px; list-style: none; }
-        .nav-item { padding: 14px 18px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; transition: all 0.3s; font-weight: 600; }
-        .nav-item:hover, .nav-item.active { background: rgba(255, 180, 0, 0.08); color: var(--accent); }
-        .main-container { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 40px; background: radial-gradient(circle at top right, #161b22, var(--bg)); }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .user-badge { background: var(--surface); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-        .status-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
-        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-        .glass-card { background: rgba(17, 20, 27, 0.6); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; transition: all 0.3s; }
-        .glass-card:hover { border-color: var(--accent-glow); transform: translateY(-5px); }
-        .card-header { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; display: flex; justify-content: space-between; }
-        .big-stat { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .progress-track { width: 100%; height: 6px; background: #1c2128; border-radius: 10px; margin: 20px 0; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #ff8c00); box-shadow: 0 0 15px var(--accent-glow); width: 0%; transition: width 1.5s ease; }
-        .action-button { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
-        .action-button:hover { box-shadow: 0 0 25px var(--accent-glow); filter: brightness(1.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; color: var(--text-secondary); font-size: 0.8rem; padding: 10px; }
-        td { padding: 15px 10px; border-top: 1px solid var(--border); font-weight: 500; }
-        .status-online { color: #00ff88; }
-        @media (max-width: 768px) { .sidebar { display: none; } .main-container { padding: 20px; } .menu-toggle { display: block; } }
-        .menu-toggle { display: none; position: fixed; top: 20px; left: 20px; z-index: 200; background: var(--accent); border: none; padding: 10px 15px; border-radius: 30px; color: #000; cursor: pointer; }
-        .form-control { width:100%; padding:12px; background:#1f2937; border:1px solid #374151; border-radius:40px; color:white; margin-bottom:12px; }
-    </style>
+<html><head><title>Dashboard • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#eef5ff; overflow-x:hidden;}
+.sidebar{position:fixed;left:0;top:0;width:280px;height:100%;background:rgba(5,10,20,0.95);backdrop-filter:blur(16px);border-right:1px solid rgba(0,255,200,0.2);padding:30px 20px;z-index:10;transition:0.3s;}
+.main{margin-left:280px;padding:30px;position:relative;z-index:2;transition:0.3s;}
+.glass-card{background:rgba(15,25,45,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(0,255,200,0.2);padding:28px;margin-bottom:30px;transition:0.3s;}
+.glass-card:hover{border-color:rgba(0,255,200,0.6);transform:translateY(-3px);}
+.btn-neon{background:linear-gradient(90deg,#00b377,#00cc88);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;color:#000;width:100%;}
+.stat-number{font-size:44px;font-weight:800;background:linear-gradient(135deg,#fff,#00ffcc);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.menu-toggle{display:none;position:fixed;top:20px;left:20px;z-index:20;background:#00ffcc;border:none;padding:10px 15px;border-radius:30px;color:#000;font-size:18px;cursor:pointer;}
+.nav-link{display:block;padding:12px 20px;margin:8px 0;border-radius:40px;color:#ccd6f0;text-decoration:none;}
+.nav-link:hover,.nav-link.active{background:rgba(0,255,200,0.15);color:#00ffcc;}
+@media (max-width:800px){.sidebar{transform:translateX(-100%);width:260px;}.main{margin-left:0;padding:70px 20px 20px;}.menu-toggle{display:block;}}
+.table-responsive{overflow-x:auto;}
+</style>
 </head>
 <body>
-    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-    <aside class="sidebar" id="sidebar">
-        <div class="brand-section"><div class="brand-logo">INFERNO</div></div>
-        <ul class="nav-list">
-            <li class="nav-item active"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
-            <li class="nav-item" onclick="window.location.href='/attack'"><i class="fas fa-bolt"></i> Attack Hub</li>
-            <li class="nav-item" onclick="window.location.href='/products'"><i class="fas fa-shopping-cart"></i> Products</li>
-            <li class="nav-item" onclick="window.location.href='/logout'"><i class="fas fa-sign-out-alt"></i> Logout</li>
-        </ul>
-        <div style="padding:20px;"><div class="user-badge"><div class="status-dot"></div><span>{{ user.plan }}</span></div></div>
-    </aside>
-    <main class="main-container">
-        <div class="top-bar"><div><h1 style="font-weight:800;">Command Center</h1><p style="color:var(--text-secondary);">Welcome back, {{ user.username }}.</p></div></div>
-        <div class="grid-layout">
-            <div class="glass-card">
-                <div class="card-header"><span>Free Network</span><span style="color:var(--accent);">{{ slots_used }}/{{ max_slots }} Slots Used</span></div>
-                <div class="big-stat">{{ (slots_used/max_slots*100)|round(0) if max_slots>0 else 0 }}%</div>
-                <div class="progress-track"><div class="progress-fill" id="loadBar" style="width: {{ (slots_used/max_slots*100) if max_slots>0 else 0 }}%;"></div></div>
-                <p style="font-size:0.85rem; color:var(--text-secondary);">Upgrade for 10x Power</p>
-                <a href="/products"><button class="action-button" style="margin-top:15px;">⚡ Upgrade Now</button></a>
-            </div>
-            <div class="glass-card">
-                <div class="card-header"><span>Quick Attack</span></div>
-                <form id="attackForm">
-                    <input type="text" name="host" placeholder="Target IP" class="form-control" required>
-                    <input type="number" name="port" placeholder="Port" class="form-control" required>
-                    <input type="number" name="time" placeholder="Duration (sec)" value="60" class="form-control" required>
-                    <select name="method" class="form-control"><option value="UDP">UDP Flood 🔥🔥🔥🔥🔥</option></select>
-                    <button type="submit" class="action-button">💥 Launch Attack</button>
-                </form>
-                <div id="attackResult" style="margin-top:15px;"></div>
-            </div>
-        </div>
-        <div class="glass-card" style="margin-top:30px;">
-            <div class="card-header">Recent Attacks</div>
-            <div class="table-responsive"><table><thead><tr><th>Target</th><th>Port</th><th>Duration</th><th>Method</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.duration }}s</td><td>{{ a.method }}</td><td><span class="status-online">{{ a.status }}</span></td><td>{{ a.timestamp.strftime('%H:%M:%S') }}</td></tr>{% else %}<tr><td colspan="6" style="text-align:center;">No attacks yet</td></tr>{% endfor %}</tbody></table></div>
-        </div>
-    </main>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        document.getElementById('menuToggle')?.addEventListener('click', () => {
-            let s = document.getElementById('sidebar');
-            s.style.display = s.style.display === 'none' ? 'flex' : 'none';
-        });
-        $('#attackForm').submit(function(e){
-            e.preventDefault();
-            $.post('/launch', $(this).serialize(), function(data){
-                if(data.status === 'success') {
-                    $('#attackResult').html('<div style="color:#00ff88;">'+data.message+'</div>');
-                    setTimeout(() => location.reload(), 2000);
-                } else {
-                    $('#attackResult').html('<div style="color:#ff5555;">'+data.message+'</div>');
-                }
-            });
-        });
-    </script>
+<button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+<div class="sidebar" id="sidebar"><div class="text-center mb-4"><h2 style="color:#00ffcc;">🚀 STRESSER</h2></div>
+<nav><a href="/dashboard" class="nav-link active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a><a href="/attack" class="nav-link"><i class="fas fa-bolt me-2"></i> Attack Hub</a><a href="/products" class="nav-link"><i class="fas fa-shopping-cart me-2"></i> Products</a><a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></nav>
+<div class="mt-5 pt-3 border-top"><p><i class="fas fa-gem me-2"></i> {{ user.plan }}</p><p><i class="fas fa-hourglass-half me-2"></i> Max Duration: {{ user.max_duration }}s</p><p><i class="fas fa-layer-group me-2"></i> Concurrent: {{ user.max_concurrent }}</p><p><i class="far fa-calendar-alt me-2"></i> Expires: Lifetime</p></div></div>
+<div class="main">
+<div class="glass-card"><div class="d-flex justify-content-between align-items-center"><h3><i class="fas fa-chart-line me-2"></i> Free Network</h3><span class="badge bg-info">{{ slots_used }} / {{ max_slots }} Slots Used</span></div>
+<div class="mt-3"><div class="d-flex justify-content-between"><span>Network Load</span><span>{{ (slots_used/max_slots*100)|round(0) if max_slots>0 else 0 }}%</span></div><div class="progress mt-2" style="height:8px;"><div class="progress-bar bg-info" style="width: {{ (slots_used/max_slots*100) if max_slots>0 else 0 }}%"></div></div></div>
+<div class="row mt-4"><div class="col-6 text-center"><div class="stat-number">{{ slots_used }}</div><div>Slots Used</div></div><div class="col-6 text-center"><div class="stat-number">{{ max_slots }}</div><div>Max Slots</div></div></div>
+<div class="mt-4"><p class="text-muted">Upgrade for 10x Power – More slots, longer duration, premium methods, bigger IP pool.</p><a href="/products" class="btn-neon">⚡ Upgrade Now</a></div></div>
+<div class="glass-card"><h3><i class="fas fa-history me-2"></i> Recent Attacks</h3><div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th>Target</th><th>Port</th><th>Duration</th><th>Method</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.duration }}s</td><td>{{ a.method }}</td><td><span class="badge bg-success">{{ a.status }}</span></td><td>{{ a.timestamp.strftime('%H:%M:%S') }}</td></tr>{% else %}<tr><td colspan="6" class="text-center">No attacks yet</td></tr>{% endfor %}</tbody></table></div></div></div>
+<script>document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));</script>
 </body></html>
 '''
 
 ATTACK_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Attack Hub • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:800;color:#000;}
+<html><head><title>Attack Hub • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(0,255,200,0.2);padding:28px;margin-bottom:30px;}
+.btn-neon{background:linear-gradient(90deg,#00b377,#00cc88);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;}
 input,select{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%;}
 </style>
 </head>
-<body><div class="container py-4"><div class="glass-card"><h2 class="mb-3"><i class="fas fa-bolt me-2" style="color:#ffb400;"></i> Launch Attack</h2>
+<body><div class="container py-4"><div class="glass-card"><h2 class="mb-3"><i class="fas fa-bolt me-2"></i> Launch Attack</h2>
 <form method="POST"><div class="mb-3"><label>Target IP Address</label><input type="text" name="target" required></div>
 <div class="mb-3"><label>Port</label><input type="number" name="port" required></div>
 <div class="mb-3"><label>Duration (seconds) – Max {{ user.max_duration }}s</label><input type="number" name="duration" value="60" min="1" max="{{ user.max_duration }}" required></div>
 <div class="mb-3"><label>Attack Method</label><select name="method"><option value="UDP">UDP Flood 🔥🔥🔥🔥🔥</option></select></div>
 <div class="mb-3"><label>Concurrent (Max {{ user.max_concurrent }})</label><input type="range" name="concurrent" class="form-range" min="1" max="{{ user.max_concurrent }}" value="1" oninput="this.nextElementSibling.value=this.value"><output>1</output></div>
-<button type="submit" class="btn-gold w-100">💥 Launch Attack</button></form>
+<button type="submit" class="btn-neon w-100">💥 Launch Attack</button></form>
 {% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }} mt-3">{{ msg }}</div>{% endfor %}{% endwith %}</div>
 <a href="/dashboard" class="btn btn-link text-info">← Back to Dashboard</a></div>
 <script>document.querySelector('input[name="concurrent"]').addEventListener('input',function(e){this.nextElementSibling.value=this.value;});</script>
 </body></html>
 '''
 
-PRODUCTS_HTML = '''
-<!DOCTYPE html>
-<html><head><title>Products • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
-.btn-gold{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:800;color:#000;}
-.pricing-card{text-align:center;}.price{font-size:36px; font-weight:800; color:#ffb400;}
-</style>
-</head>
-<body><div class="container py-4"><div class="d-flex justify-content-between align-items-center mb-4"><h2 style="color:#ffb400;">🚀 Upgrade Your Plan</h2><a href="/dashboard" class="btn btn-link text-info">← Back</a></div>
-<div class="row g-4">{% for plan in plans %}<div class="col-md-3"><div class="glass-card pricing-card"><h3>{{ plan.name }}</h3><div class="price">{{ plan.price }}</div>
-<div class="mt-3"><p><i class="fas fa-layer-group"></i> {{ plan.concurrent }} Concurrent Slots</p><p><i class="fas fa-hourglass-half"></i> {{ plan.duration }}s Max Duration</p>
-<p><i class="fas fa-bolt"></i> {{ plan.methods }}</p><p><i class="fas fa-server"></i> {{ plan.slots }} Attack Slots</p></div>
-<button class="btn-gold mt-3" onclick="alert('Contact admin to upgrade')">Contact Sales</button></div></div>{% endfor %}</div></div>
-</body></html>
-'''
-
 ADMIN_LOGIN_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Login • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.8); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,180,0,0.2); padding:40px; width:100%; max-width:450px;}
+<html><head><title>Admin Login • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.6); backdrop-filter:blur(12px); border-radius:32px; border:1px solid rgba(255,0,100,0.3); padding:40px; width:100%; max-width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.4);}
 input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%; margin-bottom:20px;}
-.btn-admin{background:linear-gradient(90deg,#ffb400,#ff8c00); border:none; border-radius:40px; padding:12px; font-weight:800; width:100%;}
+.btn-admin{background:linear-gradient(90deg,#ff3366,#ff6680); border:none; border-radius:40px; padding:12px; font-weight:bold; width:100%;}
 </style>
 </head>
-<body><div class="glass-card"><h2 class="text-center mb-4" style="color:#ffb400;">👑 Admin Login</h2>
+<body><div class="glass-card"><h2 class="text-center mb-4" style="color:#ff6680;">👑 Admin Login</h2>
 {% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}{% endwith %}
 <form method="POST"><input type="text" name="username" placeholder="Admin Username" required><input type="password" name="password" placeholder="Admin Password" required><button type="submit" class="btn-admin">🔐 Login as Admin</button></form>
 <p class="text-center mt-3"><a href="/login">← User Login</a></p></div></body></html>
@@ -1360,127 +1296,147 @@ input{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; 
 
 ADMIN_DASHBOARD_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Dashboard • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff;}
-.sidebar{position:fixed;left:0;top:0;width:260px;height:100%;background:rgba(5,10,20,0.95);border-right:1px solid rgba(255,180,0,0.2);padding:30px 20px;z-index:10;}
-.main{margin-left:260px;padding:30px;}
-.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:24px;border:1px solid rgba(255,180,0,0.15);padding:20px;margin-bottom:25px;}
-.stat-number{font-size:32px;font-weight:800;background:linear-gradient(135deg,#fff,#ffb400);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.nav-link{display:block;padding:12px 20px;margin:8px 0;border-radius:40px;color:#8b949e;text-decoration:none;}
-.nav-link:hover,.nav-link.active{background:rgba(255,180,0,0.15);color:#ffb400;}
-.menu-toggle{display:none;position:fixed;top:20px;left:20px;z-index:20;background:#ffb400;border:none;padding:10px 15px;border-radius:30px;color:#000;cursor:pointer;}
+<html><head><title>Admin Dashboard • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff;}
+.sidebar{position:fixed;left:0;top:0;width:260px;height:100%;background:rgba(5,10,20,0.95);border-right:1px solid rgba(255,51,102,0.3);padding:30px 20px;z-index:10;transition:0.3s;}
+.main{margin-left:260px;padding:30px;transition:0.3s;}
+.glass-card{background:rgba(15,25,45,0.45);backdrop-filter:blur(12px);border-radius:24px;border:1px solid rgba(255,51,102,0.2);padding:20px;margin-bottom:25px;}
+.stat-number{font-size:32px;font-weight:800;background:linear-gradient(135deg,#fff,#ff6680);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.nav-link{display:block;padding:12px 20px;margin:8px 0;border-radius:40px;color:#ccd6f0;text-decoration:none;}
+.nav-link:hover,.nav-link.active{background:rgba(255,51,102,0.15);color:#ff6680;}
+.menu-toggle{display:none;position:fixed;top:20px;left:20px;z-index:20;background:#ff6680;border:none;padding:10px 15px;border-radius:30px;color:#fff;cursor:pointer;}
 @media (max-width:800px){.sidebar{transform:translateX(-100%);}.main{margin-left:0;padding:70px 20px 20px;}.menu-toggle{display:block;}}
+.table-responsive{overflow-x:auto;}
 </style>
 </head>
 <body><button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-<div class="sidebar" id="sidebar"><h3 style="color:#ffb400;">👑 Admin Panel</h3>
-<nav><a href="/admin/dashboard" class="nav-link active"> Dashboard</a><a href="/admin/attack" class="nav-link"> Launch Attack</a><a href="/admin/users" class="nav-link"> Users</a><a href="/admin/attacks" class="nav-link"> Attack Logs</a><a href="/admin/api_keys" class="nav-link"> API Keys</a><a href="/admin/nodes" class="nav-link"> Attack Nodes</a><a href="/admin/settings" class="nav-link"> Settings</a><a href="/admin/logout" class="nav-link"> Logout</a></nav></div>
+<div class="sidebar" id="sidebar"><h3 style="color:#ff6680;">👑 Admin Panel</h3>
+<nav><a href="/admin/dashboard" class="nav-link active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a><a href="/admin/attack" class="nav-link"><i class="fas fa-bolt me-2"></i> Launch Attack</a><a href="/admin/users" class="nav-link"><i class="fas fa-users me-2"></i> Users</a><a href="/admin/attacks" class="nav-link"><i class="fas fa-history me-2"></i> Attack Logs</a><a href="/admin/api_keys" class="nav-link"><i class="fas fa-key me-2"></i> API Keys</a><a href="/admin/nodes" class="nav-link"><i class="fas fa-server me-2"></i> Attack Nodes</a><a href="/admin/settings" class="nav-link"><i class="fas fa-cog me-2"></i> Settings</a><a href="/admin/logout" class="nav-link"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></nav></div>
 <div class="main"><h2>Admin Dashboard</h2><div class="row g-4 mb-4">
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ total_users }}</div><div>Total Users</div></div></div>
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ total_attacks }}</div><div>Total Attacks</div></div></div>
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ total_nodes }}</div><div>Total Nodes</div></div></div>
 <div class="col-md-3"><div class="glass-card text-center"><div class="stat-number">{{ active_nodes }}</div><div>Active Nodes</div></div></div></div>
-<div class="glass-card"><h4>Recent Attacks</h4><div class="table-responsive"><table class="table table-dark">...</table></div></div></div>
+<div class="glass-card"><h4>Recent Attacks</h4><div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in recent_attacks %}<tr><td>{{ a.id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M') }}</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="glass-card"><h4>Recent Users</h4><div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Attacks</th><th>Created</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:16] }}...</code></td><td>{{ u.plan }}</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td></tr>{% endfor %}</tbody></table></div></div></div>
 <script>document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));</script>
 </body></html>
 '''
 
 ADMIN_ATTACK_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Attack • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:radial-gradient(circle at 10% 20%, #07080a, #000); font-family:'Plus Jakarta Sans',sans-serif; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,180,0,0.15);padding:28px;margin-bottom:30px;}
-.btn-admin{background:linear-gradient(90deg,#ffb400,#ff8c00);border:none;border-radius:60px;padding:12px 24px;font-weight:800;color:#000;}
+<html><head><title>Admin Attack • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:radial-gradient(circle at 10% 20%, #0a0a1a, #000); font-family:'Inter',sans-serif; color:#fff; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.45);backdrop-filter:blur(12px);border-radius:32px;border:1px solid rgba(255,51,102,0.2);padding:28px;margin-bottom:30px;}
+.btn-admin{background:linear-gradient(90deg,#ff3366,#ff6680);border:none;border-radius:60px;padding:12px 24px;font-weight:bold;color:#fff;}
 input,select{background:rgba(0,0,0,0.5); border:1px solid #2a3a5a; border-radius:40px; padding:12px 20px; color:white; width:100%;}
 </style>
 </head>
-<body><div class="container py-4"><div class="glass-card"><h2 class="mb-3"><i class="fas fa-bolt me-2" style="color:#ffb400;"></i> Admin Attack Launcher</h2>
+<body><div class="container py-4"><div class="glass-card"><h2 class="mb-3"><i class="fas fa-bolt me-2"></i> Admin Attack Launcher</h2>
 <form method="POST"><div class="mb-3"><label>Target IP Address</label><input type="text" name="target" required></div>
 <div class="mb-3"><label>Port</label><input type="number" name="port" required></div>
 <div class="mb-3"><label>Duration (seconds)</label><input type="number" name="duration" value="60" min="1" max="3600" required></div>
 <div class="mb-3"><label>Attack Method</label><select name="method"><option value="UDP">UDP Flood</option></select></div>
 <div class="mb-3"><label>Concurrent Slots (1-100)</label><input type="range" name="concurrent" class="form-range" min="1" max="100" value="1" oninput="this.nextElementSibling.value=this.value"><output>1</output></div>
-<button type="submit" class="btn-admin w-100">🔥 Launch Admin Attack</button></form></div>
-<a href="/admin/dashboard" class="btn btn-link text-info">← Back</a></div>
+<button type="submit" class="btn-admin w-100">🔥 Launch Admin Attack</button></form>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }} mt-3">{{ msg }}</div>{% endfor %}{% endwith %}</div>
+<a href="/admin/dashboard" class="btn btn-link text-info">← Back to Admin Dashboard</a></div>
 <script>document.querySelector('input[name="concurrent"]').addEventListener('input',function(e){this.nextElementSibling.value=this.value;});</script>
 </body></html>
 '''
 
 ADMIN_USERS_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Users • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#07080a; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
-th{color:#ffb400;}
+<html><head><title>Admin Users • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:#0a0a1a; color:#fff; padding:20px;}
+.table-responsive{overflow-x:auto;}
+.glass-card{background:rgba(15,25,45,0.45);border-radius:24px;padding:20px;}
 </style>
 </head>
 <body><div class="container"><div class="glass-card"><h2>User Management</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
-<div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Max Concurrent</th><th>Max Duration</th><th>Total Attacks</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:24] }}...</code></td><td>{{ u.plan }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><input type="number" name="max_concurrent" value="{{ u.max_concurrent }}" style="width:70px"><button type="submit" name="action" value="set_limit" class="btn btn-sm btn-primary">Set</button></form></td><td>{{ u.max_duration }}s</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><button type="submit" name="action" value="reset_token" class="btn btn-sm btn-warning">Reset</button></form><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline" onsubmit="return confirm('Delete user?')"><button type="submit" name="action" value="delete" class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div></body></html>
+<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>Token</th><th>Plan</th><th>Max Concurrent</th><th>Max Duration</th><th>Total Attacks</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for u in users %}<tr><td>{{ u.id }}</td><td><code>{{ u.token[:24] }}...</code></td><td>{{ u.plan }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><input type="number" name="max_concurrent" value="{{ u.max_concurrent }}" style="width:70px"><button type="submit" name="action" value="set_limit" class="btn btn-sm btn-primary">Set</button></form></td><td>{{ u.max_duration }}s</td><td>{{ u.total_attacks }}</td><td>{{ u.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline"><button type="submit" name="action" value="reset_token" class="btn btn-sm btn-warning">Reset Token</button></form><form method="POST" action="/admin/users/{{ u.id }}/edit" style="display:inline" onsubmit="return confirm('Delete user?')"><button type="submit" name="action" value="delete" class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div>
+</body></html>
 '''
 
 ADMIN_ATTACKS_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Attacks • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#07080a; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
-th{color:#ffb400;}
+<html><head><title>Admin Attacks • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:#0a0a1a; color:#fff; padding:20px;}
+.table-responsive{overflow-x:auto;}
+.glass-card{background:rgba(15,25,45,0.45);border-radius:24px;padding:20px;}
 </style>
 </head>
 <body><div class="container"><div class="glass-card"><h2>Attack Logs</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
-<div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>User ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Concurrent</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.id }}</td><td>{{ a.user_id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.concurrent }}</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>{% endfor %}</tbody></table></div></div></div></body></html>
+<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>User ID</th><th>Target</th><th>Port</th><th>Method</th><th>Duration</th><th>Concurrent</th><th>Status</th><th>Time</th></tr></thead><tbody>{% for a in attacks %}<tr><td>{{ a.id }}</td><td>{{ a.user_id }}</td><td>{{ a.target }}</td><td>{{ a.port }}</td><td>{{ a.method }}</td><td>{{ a.duration }}s</td><td>{{ a.concurrent }}</td><td>{{ a.status }}</td><td>{{ a.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>{% endfor %}</tbody></table></div></div></div>
+</body></html>
 '''
 
 ADMIN_API_KEYS_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin API Keys • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#07080a; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
+<html><head><title>Admin API Keys • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:#0a0a1a; color:#fff; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
+.table-responsive{overflow-x:auto;}
 </style>
 </head>
-<body><div class="container"><div class="glass-card"><h2>API Keys</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
-<div class="card bg-dark mb-4"><div class="card-header">Create API Key</div><div class="card-body"><form method="POST" action="/admin/api_keys/create" class="row g-2"><select name="user_id" class="col-md-3"><option value="">Select User</option>{% for uid, uname in users.items() %}<option value="{{ uid }}">{{ uname }}</option>{% endfor %}</select><input type="text" name="name" placeholder="Key name" class="col-md-2"><input type="text" name="whitelist_ips" placeholder="Whitelist IPs" class="col-md-3"><input type="number" name="expires_days" placeholder="Expiry days" class="col-md-2"><button type="submit" class="btn btn-primary col-md-2">Create Key</button></form></div></div>
-<div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>User</th><th>Name</th><th>Key</th><th>Whitelist</th><th>Expires</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for k in keys %}<tr><td>{{ k.id }}</td><td>{{ users[k.user_id] }}</td><td>{{ k.name }}</td><td><code>{{ k.key[:20] }}...</code></td><td>{{ k.whitelist_ips }}</td><td>{{ k.expires_at.strftime('%Y-%m-%d') if k.expires_at else 'Never' }}</td><td>{{ k.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/api_keys/{{ k.id }}/delete" style="display:inline"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div></body></html>
+<body><div class="container"><div class="glass-card"><h2>All API Keys</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
+<div class="card bg-dark mb-4"><div class="card-header">Create API Key</div><div class="card-body"><form method="POST" action="/admin/api_keys/create" class="row g-2"><select name="user_id" class="col-md-3"><option value="">Select User</option>{% for uid, uname in users.items() %}<option value="{{ uid }}">{{ uname }}</option>{% endfor %}</select><input type="text" name="name" placeholder="Key name" class="col-md-2"><input type="text" name="whitelist_ips" placeholder="Whitelist IPs (comma)" class="col-md-3"><input type="number" name="expires_days" placeholder="Expiry days (optional)" class="col-md-2"><button type="submit" class="btn btn-primary col-md-2">Create Key</button></form></div></div>
+<div class="table-responsive"><table class="table table-dark"><thead><tr><th>ID</th><th>User</th><th>Name</th><th>Key</th><th>Whitelist</th><th>Expires</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for k in keys %}<tr><td>{{ k.id }}</td><td>{{ users[k.user_id] }}</td><td>{{ k.name }}</td><td><code>{{ k.key[:20] }}...</code></td><td>{{ k.whitelist_ips }}</td><td>{{ k.expires_at.strftime('%Y-%m-%d') if k.expires_at else 'Never' }}</td><td>{{ k.created_at.strftime('%Y-%m-%d') }}</td><td><form method="POST" action="/admin/api_keys/{{ k.id }}/delete" style="display:inline"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div>
+</body></html>
 '''
 
 ADMIN_NODES_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Nodes • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#07080a; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
-.status-online{color:#00ff88;}.status-offline{color:#ff6680;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:12px;border-bottom:1px solid #2a3a5a;}
+<html><head><title>Admin Nodes • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:#0a0a1a; color:#fff; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
+.table-responsive{overflow-x:auto;}
+.status-online{color:#00ff88;font-weight:bold;}
+.status-offline{color:#ff6680;font-weight:bold;}
 </style>
 </head>
-<body><div class="container"><div class="glass-card"><h2>Attack Nodes</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
-<div class="row g-4"><div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add GitHub Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_github"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="github_token" placeholder="GitHub Token" class="form-control mb-2" required><input type="text" name="github_repo" placeholder="Repo Name (default: InfernoCore)" class="form-control mb-2"><div class="form-check"><input type="checkbox" name="enabled" class="form-check-input" checked> Enabled</div><button type="submit" class="btn btn-primary mt-2">Add GitHub Node</button></form></div></div></div>
-<div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add VPS Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_vps" enctype="multipart/form-data"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="vps_host" placeholder="VPS Host (IP)" class="form-control mb-2" required><input type="number" name="vps_port" placeholder="Port" class="form-control mb-2" value="22"><input type="text" name="vps_username" placeholder="Username" class="form-control mb-2" required><input type="password" name="vps_password" placeholder="Password" class="form-control mb-2"><div class="mb-2"><label>SSH Private Key (.pem)</label><input type="file" name="vps_key_file" class="form-control" accept=".pem,.key"></div><div class="form-check"><input type="checkbox" name="enabled" class="form-check-input" checked> Enabled</div><button type="submit" class="btn btn-primary mt-2">Add VPS Node</button></form></div></div></div></div>
-<div class="card bg-dark mt-4"><div class="card-header">📤 Distribute Binary</div><div class="card-body"><form method="POST" action="/admin/upload_binary" enctype="multipart/form-data"><input type="file" name="binary" class="form-control bg-dark text-white" required><button type="submit" class="btn btn-warning mt-2">Upload & Distribute</button></form><small>Upload compiled 'soul' binary – sent to all enabled nodes.</small></div></div>
-<div class="table-responsive mt-4"><table class="table"><thead><tr><th>Name</th><th>Type</th><th>Enabled</th><th>Status</th><th>Binary</th><th>Details</th><th>Actions</th></tr></thead><tbody>{% for n in nodes %}<tr><td>{{ n.name }}</td><td>{{ n.node_type }}</td><td>{% if n.enabled %}✔{% else %}✘{% endif %}</td><td class="{% if n.last_status == 'online' %}status-online{% else %}status-offline{% endif %}">{{ n.last_status }}</td><td>{% if n.binary_present %}✓{% else %}✗{% endif %}</td><td>{% if n.node_type == 'github' %}{{ n.github_repo }}{% else %}{{ n.vps_host }}:{{ n.vps_port }}{% endif %}</td><td><form method="POST" action="/admin/nodes/{{ n.id }}/check" style="display:inline"><button class="btn btn-sm btn-info">Check</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/toggle" style="display:inline"><button class="btn btn-sm btn-warning">Toggle</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/delete" style="display:inline" onsubmit="return confirm('Delete node?')"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div></body></html>
+<body><div class="container"><div class="glass-card"><h2>Attack Node Management</h2><a href="/admin/dashboard" class="btn btn-secondary mb-3">← Back</a>
+<div class="row g-4"><div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add GitHub Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_github"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="github_token" placeholder="GitHub Token" class="form-control mb-2" required><input type="text" name="github_repo" placeholder="Repo Name (default: InfernoCore)" class="form-control mb-2"><div class="form-check mb-2"><input type="checkbox" name="enabled" class="form-check-input" checked> <label class="form-check-label">Enabled</label></div><button type="submit" class="btn btn-primary">Add GitHub Node</button></form></div></div></div>
+<div class="col-md-6"><div class="card bg-dark"><div class="card-header">➕ Add VPS Node</div><div class="card-body"><form method="POST" action="/admin/nodes/add_vps" enctype="multipart/form-data"><input type="text" name="name" placeholder="Node Name" class="form-control mb-2" required><input type="text" name="vps_host" placeholder="VPS Host (IP)" class="form-control mb-2" required><input type="number" name="vps_port" placeholder="Port (default 22)" class="form-control mb-2" value="22"><input type="text" name="vps_username" placeholder="Username" class="form-control mb-2" required><input type="password" name="vps_password" placeholder="Password (or leave empty for key)" class="form-control mb-2"><div class="mb-2"><label>SSH Private Key (.pem file) – optional</label><input type="file" name="vps_key_file" class="form-control" accept=".pem,.key"><small class="text-muted">If provided, password will be ignored.</small></div><div class="form-check mb-2"><input type="checkbox" name="enabled" class="form-check-input" checked> <label class="form-check-label">Enabled</label></div><button type="submit" class="btn btn-primary">Add VPS Node</button></form></div></div></div></div>
+<div class="card bg-dark mt-4"><div class="card-header">📤 Distribute Binary</div><div class="card-body"><form method="POST" action="/admin/upload_binary" enctype="multipart/form-data" class="row g-2"><div class="col-md-8"><input type="file" name="binary" class="form-control bg-dark text-white" required></div><div class="col-md-4"><button type="submit" class="btn btn-warning">Upload & Distribute</button></div></form><small class="text-muted">Upload your compiled 'soul' binary. It will be sent to all enabled nodes.</small></div></div>
+<div class="table-responsive mt-4"><table class="table table-dark"><thead><tr><th>Name</th><th>Type</th><th>Enabled</th><th>Status</th><th>Binary</th><th>Details</th><th>Actions</th></tr></thead><tbody>{% for n in nodes %}<td><td>{{ n.name }}</td><td>{{ n.node_type }}</td><td>{% if n.enabled %}<span class="text-success">✔</span>{% else %}<span class="text-danger">✘</span>{% endif %}</td><td class="{% if n.last_status == 'online' %}status-online{% else %}status-offline{% endif %}">{{ n.last_status|default('unknown') }}</td><td>{% if n.binary_present %}<span class="text-success">✓</span>{% else %}<span class="text-danger">✗</span>{% endif %}</td><td>{% if n.node_type=='github' %}{{ n.github_repo }}{% else %}{{ n.vps_host }}:{{ n.vps_port }}{% endif %}</td><td><form method="POST" action="/admin/nodes/{{ n.id }}/check" style="display:inline"><button class="btn btn-sm btn-info">Check</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/toggle" style="display:inline"><button class="btn btn-sm btn-warning">Toggle</button></form> <form method="POST" action="/admin/nodes/{{ n.id }}/delete" style="display:inline" onsubmit="return confirm('Delete node?')"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div></div>
+</body></html>
 '''
 
 ADMIN_SETTINGS_HTML = '''
 <!DOCTYPE html>
-<html><head><title>Admin Settings • INFERNO</title><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#07080a; color:#fff; padding:20px;}
-.glass-card{background:rgba(17,20,27,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
-.btn-danger{background:#ff3355;}.btn-warning{background:#ffaa00; color:#000;}
+<html><head><title>Admin Settings • STRESSER</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>body{background:#0a0a1a; color:#fff; padding:20px;}
+.glass-card{background:rgba(15,25,45,0.45);border-radius:24px;padding:20px;margin-bottom:20px;}
+.btn-danger{background:#ff3355;}
+.btn-warning{background:#ffaa00; color:#000;}
 </style>
 </head>
 <body><div class="container"><div class="glass-card"><h2>Admin Settings</h2>
-<form method="POST"><div class="mb-3"><label>Change Admin Password</label><input type="password" name="new_admin_password" class="form-control bg-dark text-white" placeholder="New password (min 6 chars)" required></div><button type="submit" class="btn btn-primary">Update Password</button></form>
-<hr><h3>Storage Management</h3><div class="row"><div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL users?')"><input type="hidden" name="clear_users" value="1"><button type="submit" class="btn btn-danger w-100">Clear Users ({{ stats.users }})</button></form></div>
-<div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL API keys?')"><input type="hidden" name="clear_api_keys" value="1"><button type="submit" class="btn btn-danger w-100">Clear API Keys ({{ stats.api_keys }})</button></form></div>
-<div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL attack logs?')"><input type="hidden" name="clear_attack_logs" value="1"><button type="submit" class="btn btn-warning w-100">Clear Attack Logs ({{ stats.attack_logs }})</button></form></div>
-<div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL attack nodes?')"><input type="hidden" name="clear_nodes" value="1"><button type="submit" class="btn btn-danger w-100">Clear Nodes ({{ stats.nodes }})</button></form></div></div>
-<a href="/admin/dashboard" class="btn btn-secondary mt-3">← Back</a></div></div></body></html>
+<form method="POST">
+    <div class="mb-3"><label>Change Admin Password</label><input type="password" name="new_admin_password" class="form-control bg-dark text-white" placeholder="New password (min 6 chars)" required></div>
+    <button type="submit" class="btn btn-primary">Update Password</button>
+</form>
+<hr>
+<h3>Storage Management</h3>
+<div class="row">
+    <div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL users?')"><input type="hidden" name="clear_users" value="1"><button type="submit" class="btn btn-danger w-100">Clear Users ({{ stats.users }})</button></form></div>
+    <div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL API keys?')"><input type="hidden" name="clear_api_keys" value="1"><button type="submit" class="btn btn-danger w-100">Clear API Keys ({{ stats.api_keys }})</button></form></div>
+    <div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL attack logs?')"><input type="hidden" name="clear_attack_logs" value="1"><button type="submit" class="btn btn-warning w-100">Clear Attack Logs ({{ stats.attack_logs }})</button></form></div>
+    <div class="col-md-3 mb-2"><form method="POST" onsubmit="return confirm('Clear ALL attack nodes?')"><input type="hidden" name="clear_nodes" value="1"><button type="submit" class="btn btn-danger w-100">Clear Nodes ({{ stats.nodes }})</button></form></div>
+</div>
+<a href="/admin/dashboard" class="btn btn-secondary mt-3">← Back</a></div></div>
+</body></html>
 '''
 
 if __name__ == '__main__':
